@@ -3,7 +3,7 @@ import CONSTANTS from './Constants'
 import { ChainId, Token, TokenAmount, Pair } from '@uniswap/sdk'
 
 import Bluebird from 'bluebird'
-import { TransactionReceipt } from '@ethersproject/providers'
+import fs from 'fs'
 
 export default class UniUserSnapshotBuilder {
   private readonly blockHeight: string
@@ -38,7 +38,7 @@ export default class UniUserSnapshotBuilder {
       }
       return receipt
     }, {
-      concurrency: 100
+      concurrency: 50
     })
     let userAddresses = []
     // Promise map over transaction receipts with max concurrency of 100
@@ -60,7 +60,6 @@ export default class UniUserSnapshotBuilder {
           let pairAddress = Pair.getAddress(token0, token1)
           // If exchange address matches emitting address, this swap touched Uniswap v2
           if (pairAddress.toLowerCase() === log.address.toLowerCase()) {
-
             userAddresses.push(receipt.from)
             return
           }
@@ -79,11 +78,11 @@ export default class UniUserSnapshotBuilder {
 
       }
     }, {
-      concurrency: 100
+      concurrency: 50
     })
-
+    const candidateAccounts = new Set(fs.readFileSync('./valid-accounts.txt', "utf8").split('\n'));
     // Filter out duplicate user addresses
-    userAddresses = userAddresses.filter((value, index, self) => { return self.indexOf(value) === index; })
+    userAddresses = userAddresses.filter((value, index, self) => { return self.indexOf(value) === index && candidateAccounts.has(value); })
 
     return userAddresses
   }

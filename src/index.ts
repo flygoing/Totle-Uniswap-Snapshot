@@ -2,6 +2,7 @@ import Web3 from 'web3'
 import * as yargs from 'yargs'
 import UniTotleUserSnapshotBuilder from './UniUserSnapshotBuilder'
 import * as CONFIG from '../config'
+import fs from 'fs'
 
 yargs
   .scriptName("uni-totle-user-snapshot")
@@ -14,9 +15,8 @@ yargs
     })
   }, async function (argv) {
     const totleUniUsers = await UniTotleUserSnapshotBuilder.getUniTotleUsers(new Web3(CONFIG.JSON_RPC_URL), argv.blockNumber)
-    totleUniUsers.forEach((user)=>{
-      console.log(user)
-    })
+    fs.writeFileSync('accounts.txt', totleUniUsers.join('\n'));
+
   })
   .help()
   .argv
